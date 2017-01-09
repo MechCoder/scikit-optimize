@@ -366,7 +366,7 @@ class Space:
     @property
     def is_real(self):
         """
-        Returns true if all dimensions are Real
+        Returns true if all dimensions are Real.
         """
         return all([isinstance(dim, Real) for dim in self.dimensions])
 

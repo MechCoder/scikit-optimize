@@ -23,6 +23,7 @@ from ..acquisition import gaussian_acquisition_1D
 from ..acquisition import _gaussian_acquisition
 from ..callbacks import check_callback
 from ..callbacks import VerboseCallback
+from ..space import Categorical
 from ..space import Space
 from ..utils import create_result
 
@@ -265,6 +266,14 @@ def base_minimize(func, dimensions, base_estimator,
     transformed_bounds = np.array(space.transformed_bounds)
     parallel = Parallel(n_jobs=n_jobs)
 
+    cat_inds = []
+    non_cat_inds = []
+    for ind, dim in enumerate(space.dimensions):
+        if isinstance(dim, Categorical):
+            cat_inds.append(ind)
+        else:
+            non_cat_inds.append(ind)
+
     for i in range(n_model_iter):
         gp = clone(base_estimator)
 
@@ -303,6 +312,23 @@ def base_minimize(func, dimensions, base_estimator,
         next_x = np.clip(
             next_x, transformed_bounds[:, 0], transformed_bounds[:, 1])
         next_x = space.inverse_transform(next_x.reshape((1, -1)))[0]
+
+        if len(cat_inds) == 0:
+            if np.any(np.apply_along_axis(lambda x: np.allclose(x, next_x), 1, Xi)):
+                warnings.warn(
+                    "candidate point at the end of %d model fit, already chosen" % i)
+        else:
+            next_x_arr = np.array(next_x)
+            for x in Xi:
+                x_arr = np.array(x)
+                cat_eq = np.all(x_arr[cat_inds] == next_x_arr[cat_inds])
+                non_cat_eq = np.allclose(
+                    np.array(x_arr[non_cat_inds], dtype=np.float32),
+                    np.array(next_x_arr[non_cat_inds], dtype=np.float32))
+                if cat_eq and non_cat_eq:
+                    warnings.warn(
+                        "candidate point at the end of %d model fit, already chosen" % i)
+
         yi.append(func(next_x))
         Xi.append(next_x)
         curr_res = create_result(Xi, yi, space, rng, specs, models)
