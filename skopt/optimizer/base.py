@@ -319,12 +319,12 @@ def base_minimize(func, dimensions, base_estimator,
                     "candidate point at the end of %d model fit, already chosen" % i)
         else:
             next_x_arr = np.array(next_x)
+            next_x_non_cat = np.array(next_x_arr[non_cat_inds], dtype=np.float32)
             for x in Xi:
                 x_arr = np.array(x)
                 cat_eq = np.all(x_arr[cat_inds] == next_x_arr[cat_inds])
                 non_cat_eq = np.allclose(
-                    np.array(x_arr[non_cat_inds], dtype=np.float32),
-                    np.array(next_x_arr[non_cat_inds], dtype=np.float32))
+                    np.array(x_arr[non_cat_inds], dtype=np.float32), next_x_non_cat)
                 if cat_eq and non_cat_eq:
                     warnings.warn(
                         "candidate point at the end of %d model fit, already chosen" % i)
