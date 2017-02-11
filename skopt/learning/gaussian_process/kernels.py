@@ -410,3 +410,11 @@ class HammingKernel(sk_StationaryKernelMixin, sk_NormalizedKernelMixin, Kernel):
         if eval_gradient:
             return kernel_prod, grad
         return kernel_prod
+
+
+class SelectDimensionKernel(sk_Kernel):
+    def __init__(self, kernel, active_dims):
+        self.kernel = kernel
+        self.active_dims = active_dims
+
+    # def __call__(self, X, Y=None, eval_gradient=False):
