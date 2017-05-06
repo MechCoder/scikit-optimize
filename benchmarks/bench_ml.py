@@ -15,8 +15,10 @@ classification models.
 from collections import defaultdict
 from datetime import datetime
 import json
-import sys
 import math
+import os
+import shutil
+import sys
 
 if sys.version_info.major == 2:
     # Python 2
@@ -24,7 +26,8 @@ if sys.version_info.major == 2:
     from urllib import urlopen
 else:
     from urllib.error import HTTPError
-    from urllib import urlopen
+    from urllib.request import urlopen
+    from urllib.request import urlretrieve
 
 import numpy as np
 from sklearn.base import ClassifierMixin
@@ -157,9 +160,9 @@ def load_data_target(name):
             data = fetch_mldata("climate-model-simulation-crashes")
         except HTTPError as e:
             url = "https://archive.ics.uci.edu/ml/machine-learning-databases/00252/pop_failures.dat"
-            data = urlopen(url).read().split('\n')[1:]
-            data = [[float(v) for v in d.split()] for d in data]
-            samples = np.array(data)
+            urlretrieve(url, "temp.txt")
+            samples = np.loadtxt("temp.txt", skiprows=1)
+            os.remove("temp.txt")
             data = dict()
             data["data"] = samples[:, :-1]
             data["target"] = np.array(samples[:, -1], dtype=np.int)
